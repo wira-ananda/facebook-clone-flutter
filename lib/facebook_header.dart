@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import './widgets/profile_overlay.dart'; // Pastikan path sesuai dengan struktur project-mu
+import './widgets/profile_overlay.dart'; // Pastikan path ini sesuai struktur folder kamu
 
 class FacebookHeader extends StatelessWidget {
   const FacebookHeader({super.key});
@@ -22,7 +22,6 @@ class FacebookHeader extends StatelessWidget {
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       double screenWidth = MediaQuery.of(context).size.width;
-
                       if (screenWidth > 600) {
                         return Container(
                           height: 36,
@@ -84,7 +83,7 @@ class FacebookHeader extends StatelessWidget {
                 _CircleIcon(icon: Icons.apps),
                 _CircleIcon(icon: Icons.message, notification: '2'),
                 _CircleIcon(icon: Icons.notifications, notification: '20+'),
-                ProfileMenuButton(), // ⬅️ Widget dengan overlay terpisah
+                ProfileMenuButton(),
               ],
             ),
           ),
@@ -179,8 +178,22 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
     var offset = renderBox.localToGlobal(Offset.zero);
 
     return OverlayEntry(
-      builder: (context) => ProfileOverlay(offset: offset, size: size),
+      builder:
+          (context) => ProfileOverlay(
+            offset: offset,
+            size: size,
+            onLogout: () {
+              _removeOverlay();
+              Navigator.pushReplacementNamed(context, '/login');
+            },
+            onDismiss: _removeOverlay,
+          ),
     );
+  }
+
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
   }
 
   @override
