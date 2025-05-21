@@ -1,8 +1,62 @@
 import 'package:flutter/material.dart';
-import 'facebook_main_contents.dart'; // Pastikan file ini ada dan sudah benar
+import 'facebook_main_contents.dart';
+import './widgets/facebook_mobile_menu.dart';
 
-class FacebookHeaderMobile extends StatelessWidget {
+class FacebookHeaderMobile extends StatefulWidget {
   const FacebookHeaderMobile({super.key});
+
+  @override
+  State<FacebookHeaderMobile> createState() => _FacebookHeaderMobileState();
+}
+
+class _FacebookHeaderMobileState extends State<FacebookHeaderMobile>
+    with SingleTickerProviderStateMixin {
+  bool _showMenu = false;
+  late AnimationController _fadeController;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeInOut,
+    );
+  }
+
+  void _toggleMenu() {
+    setState(() {
+      _showMenu = !_showMenu;
+      if (_showMenu) {
+        _fadeController.forward();
+      } else {
+        _fadeController.reverse();
+      }
+    });
+  }
+
+  void _closeMenu() {
+    _fadeController.reverse().then((_) {
+      setState(() => _showMenu = false);
+    });
+  }
+
+  void _logout() {
+    _fadeController.reverse().then((_) {
+      setState(() => _showMenu = false);
+      Navigator.pushReplacementNamed(context, '/login');
+    });
+  }
+
+  @override
+  void dispose() {
+    _fadeController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,45 +69,53 @@ class FacebookHeaderMobile extends StatelessWidget {
       _IconBadge(icon: Icons.store, badge: ''),
     ];
 
-    return Column(
+    return Stack(
       children: [
-        // Top bar: logo, search, menu
-        Container(
-          color: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Row(
-            children: const [
-              Text(
-                'facebook',
-                style: TextStyle(
-                  color: Colors.blue,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Arial',
-                ),
+        Column(
+          children: [
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Row(
+                children: [
+                  const Text(
+                    'facebook',
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Arial',
+                    ),
+                  ),
+                  const Spacer(),
+                  const Icon(Icons.search, size: 26),
+                  const SizedBox(width: 12),
+                  GestureDetector(
+                    onTap: _toggleMenu,
+                    child: const Icon(Icons.menu, size: 26),
+                  ),
+                ],
               ),
-              Spacer(),
-              Icon(Icons.search, size: 26),
-              SizedBox(width: 12),
-              Icon(Icons.menu, size: 26),
-            ],
-          ),
+            ),
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: iconBadges,
+              ),
+            ),
+            const Divider(height: 1),
+            const Expanded(child: FacebookMainContent()),
+          ],
         ),
 
-        // Icon bar with badges
-        Container(
-          color: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: iconBadges,
+        // Overlay menu
+        if (_showMenu)
+          FadeTransition(
+            opacity: _fadeAnimation,
+            child: FacebookMobileMenu(onClose: _closeMenu, onLogout: _logout),
           ),
-        ),
-
-        const Divider(height: 1),
-
-        // Konten utama (status, story, post) di bawah header mobile
-        const Expanded(child: FacebookMainContent()),
       ],
     );
   }
