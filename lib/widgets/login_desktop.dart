@@ -118,7 +118,9 @@ class _LoginDesktopState extends State<LoginDesktop> {
                     borderRadius: BorderRadius.circular(6),
                   ),
                 ),
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.pushNamed(context, '/register');
+                },
                 child: const Text(
                   "Buat akun baru",
                   style: TextStyle(fontSize: 16, color: Colors.white),

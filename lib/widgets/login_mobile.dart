@@ -109,7 +109,9 @@ class _LoginMobileState extends State<LoginMobile> {
 
               // Lupa kata sandi
               TextButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.pushNamed(context, '/register');
+                },
                 child: const Text(
                   "Lupa kata sandi?",
                   style: TextStyle(color: Colors.black87),
