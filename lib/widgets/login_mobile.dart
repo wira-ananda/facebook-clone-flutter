@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart'; // sesuaikan path jika berbeda
 
 class LoginMobile extends StatefulWidget {
   const LoginMobile({super.key});
@@ -11,6 +12,30 @@ class _LoginMobileState extends State<LoginMobile> {
   final phoneController = TextEditingController();
   final passwordController = TextEditingController();
   bool _obscurePassword = true;
+  final AuthService _authService = AuthService();
+
+  void _handleLogin() async {
+    String email = phoneController.text.trim();
+    String password = passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Email dan password harus diisi")));
+      return;
+    }
+
+    bool success = await _authService.loginUser(email, password);
+
+    if (success) {
+      if (!mounted) return;
+      Navigator.pushReplacementNamed(context, '/');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Login gagal, periksa email dan password")),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,16 +121,13 @@ class _LoginMobileState extends State<LoginMobile> {
                       borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/');
-                  },
+                  onPressed: _handleLogin,
                   child: const Text(
                     "Masuk",
                     style: TextStyle(fontSize: 16, color: Colors.white),
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
 
               // Lupa kata sandi
               TextButton(

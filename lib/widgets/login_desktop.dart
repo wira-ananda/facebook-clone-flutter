@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart'; // pastikan path benar
 
 class LoginDesktop extends StatefulWidget {
   const LoginDesktop({super.key});
@@ -11,6 +12,31 @@ class _LoginDesktopState extends State<LoginDesktop> {
   bool _obscurePassword = true;
   final phoneController = TextEditingController();
   final passwordController = TextEditingController();
+  final AuthService _authService = AuthService();
+
+  void _handleLogin() async {
+    String email = phoneController.text.trim();
+    String password = passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Email dan password harus diisi")),
+      );
+      return;
+    }
+
+    bool success = await _authService.loginUser(email, password);
+    if (success) {
+      if (!mounted) return;
+      Navigator.pushReplacementNamed(context, '/');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Login gagal, periksa email dan password"),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,9 +112,7 @@ class _LoginDesktopState extends State<LoginDesktop> {
                     borderRadius: BorderRadius.circular(6),
                   ),
                 ),
-                onPressed: () {
-                  Navigator.pushReplacementNamed(context, '/');
-                },
+                onPressed: _handleLogin,
                 child: const Text(
                   "Masuk",
                   style: TextStyle(
