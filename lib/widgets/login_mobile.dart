@@ -152,7 +152,9 @@ class _LoginMobileState extends State<LoginMobile> {
                       borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/register');
+                  },
                   child: const Text(
                     "Buat akun baru",
                     style: TextStyle(fontSize: 16, color: Colors.blue),

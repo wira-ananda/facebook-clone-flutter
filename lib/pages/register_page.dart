@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart'; // Sesuaikan dengan path proyekmu
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -8,73 +9,74 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  int _currentStep = 0; // Step indicator for mobile
-  final List<Widget> _steps = [
-    Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextField(decoration: InputDecoration(labelText: 'Nama depan')),
-        TextField(decoration: InputDecoration(labelText: 'Nama belakang')),
-      ],
-    ),
-    Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextField(decoration: InputDecoration(labelText: 'Tanggal Lahir')),
-        TextField(decoration: InputDecoration(labelText: 'Bulan')),
-        TextField(decoration: InputDecoration(labelText: 'Tahun')),
-      ],
-    ),
-    Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: const [
-            Radio(value: 'Perempuan', groupValue: null, onChanged: null),
-            Text('Perempuan'),
-            Radio(value: 'Laki-laki', groupValue: null, onChanged: null),
-            Text('Laki-laki'),
-            Radio(value: 'Kustom', groupValue: null, onChanged: null),
-            Text('Kustom'),
-          ],
-        ),
-      ],
-    ),
-    Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextField(
-          decoration: InputDecoration(labelText: 'Nomor seluler atau email'),
-        ),
-        TextField(
-          decoration: InputDecoration(labelText: 'Kata sandi baru'),
-          obscureText: true,
-        ),
-      ],
-    ),
-  ];
+  final AuthService _authService = AuthService();
+
+  // Controllers
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController lastNameController = TextEditingController();
+  final TextEditingController dayController = TextEditingController();
+  final TextEditingController monthController = TextEditingController();
+  final TextEditingController yearController = TextEditingController();
+  final TextEditingController phoneOrEmailController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  String? gender; // "L" or "P"
+  int _currentStep = 0;
+
+  void _submitRegistration() async {
+    final username = "${firstNameController.text} ${lastNameController.text}";
+    final phone = phoneOrEmailController.text;
+    final email = emailController.text;
+    final password = passwordController.text;
+    final birthday =
+        "${yearController.text}-${monthController.text.padLeft(2, '0')}-${dayController.text.padLeft(2, '0')}";
+
+    await _authService.registerUser(
+      username: username,
+      email: email,
+      phone: phone,
+      birthday: birthday,
+      gender: gender ?? '',
+      password: password,
+      passwordConfirmation: password,
+      onSuccess: () => Navigator.pushReplacementNamed(context, '/login'),
+      onError:
+          (message) => ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(message))),
+    );
+  }
+
+  @override
+  void dispose() {
+    firstNameController.dispose();
+    lastNameController.dispose();
+    dayController.dispose();
+    monthController.dispose();
+    yearController.dispose();
+    phoneOrEmailController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    bool isMobile =
-        MediaQuery.of(context).size.width < 600; // Detect mobile devices
+    bool isMobile = MediaQuery.of(context).size.width < 600;
 
     return Scaffold(
-      body: Center(
+      body: Align(
+        alignment: isMobile ? Alignment.topCenter : Alignment.center,
         child: Container(
-          width:
-              isMobile
-                  ? double.infinity
-                  : 600, // Full width for mobile, fixed width for desktop
+          width: isMobile ? double.infinity : 600,
           padding: const EdgeInsets.all(16.0),
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  alignment: Alignment.center,
-                  child: const Text(
+                const Center(
+                  child: Text(
                     'facebook',
                     style: TextStyle(
                       color: Colors.blue,
@@ -94,130 +96,53 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 20),
 
-                // Mobile step-by-step navigation
                 if (isMobile) ...[
-                  _steps[_currentStep], // Show current step
+                  _buildMobileStep(_currentStep),
                   const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (_currentStep < _steps.length - 1) {
-                        setState(() {
-                          _currentStep++;
-                        });
-                      } else {
-                        Navigator.pushReplacementNamed(
-                          context,
-                          '/', // Navigate to homepage
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 48),
-                      backgroundColor: Colors.blue,
-                    ),
-                    child: Text(
-                      _currentStep < _steps.length - 1
-                          ? 'Berikutnya'
-                          : 'Daftar',
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
-
-                // Desktop layout (all fields visible)
-                if (!isMobile) ...[
-                  const SizedBox(height: 20),
-                  TextField(
-                    decoration: InputDecoration(labelText: 'Nama depan'),
-                  ),
-                  TextField(
-                    decoration: InputDecoration(labelText: 'Nama belakang'),
-                  ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          decoration: InputDecoration(
-                            labelText: 'Tanggal Lahir',
+                  Center(
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              _currentStep < 3 ? Colors.blue : Colors.green,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        onPressed: () {
+                          if (_currentStep < 3) {
+                            setState(() => _currentStep++);
+                          } else {
+                            _submitRegistration();
+                          }
+                        },
+                        child: Text(
+                          _currentStep < 3 ? 'Berikutnya' : 'Daftar',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: TextField(
-                          decoration: InputDecoration(labelText: 'Bulan'),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: TextField(
-                          decoration: InputDecoration(labelText: 'Tahun'),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
-                      Text('Jenis Kelamin'),
-                      Row(
-                        children: [
-                          Radio(
-                            value: 'Perempuan',
-                            groupValue: null,
-                            onChanged: null,
-                          ),
-                          Text('Perempuan'),
-                          Radio(
-                            value: 'Laki-laki',
-                            groupValue: null,
-                            onChanged: null,
-                          ),
-                          Text('Laki-laki'),
-                          Radio(
-                            value: 'Kustom',
-                            groupValue: null,
-                            onChanged: null,
-                          ),
-                          Text('Kustom'),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    decoration: InputDecoration(
-                      labelText: 'Nomor seluler atau email',
                     ),
                   ),
-                  TextField(
-                    decoration: InputDecoration(labelText: 'Kata sandi baru'),
-                    obscureText: true,
-                  ),
+                ] else ...[
+                  _buildDesktopForm(),
                   const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushReplacementNamed(
-                        context,
-                        '/', // Navigate to homepage
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 48),
-                      backgroundColor: Colors.green,
+                  Center(
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        onPressed: _submitRegistration,
+                        child: const Text(
+                          'Daftar',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
+                      ),
                     ),
-                    child: const Text(
-                      'Daftar',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/login');
-                    },
-                    child: const Text('Sudah memiliki akun?'),
                   ),
                 ],
               ],
@@ -225,6 +150,153 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildMobileStep(int step) {
+    switch (step) {
+      case 0:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: firstNameController,
+              decoration: InputDecoration(labelText: 'Nama depan'),
+            ),
+            TextField(
+              controller: lastNameController,
+              decoration: InputDecoration(labelText: 'Nama belakang'),
+            ),
+          ],
+        );
+      case 1:
+        return Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: dayController,
+                decoration: InputDecoration(labelText: 'Tanggal'),
+              ),
+            ),
+            Expanded(
+              child: TextField(
+                controller: monthController,
+                decoration: InputDecoration(labelText: 'Bulan'),
+              ),
+            ),
+            Expanded(
+              child: TextField(
+                controller: yearController,
+                decoration: InputDecoration(labelText: 'Tahun'),
+              ),
+            ),
+          ],
+        );
+      case 2:
+        return Row(
+          children: [
+            Radio<String>(
+              value: 'P',
+              groupValue: gender,
+              onChanged: (val) => setState(() => gender = val),
+            ),
+            const Text('Perempuan'),
+            Radio<String>(
+              value: 'L',
+              groupValue: gender,
+              onChanged: (val) => setState(() => gender = val),
+            ),
+            const Text('Laki-laki'),
+          ],
+        );
+      case 3:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: phoneOrEmailController,
+              decoration: InputDecoration(labelText: 'Nomor seluler'),
+            ),
+            TextField(
+              controller: emailController,
+              decoration: InputDecoration(labelText: 'Email'),
+            ),
+            TextField(
+              controller: passwordController,
+              obscureText: true,
+              decoration: InputDecoration(labelText: 'Kata sandi baru'),
+            ),
+          ],
+        );
+      default:
+        return Container();
+    }
+  }
+
+  Widget _buildDesktopForm() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: firstNameController,
+          decoration: InputDecoration(labelText: 'Nama depan'),
+        ),
+        TextField(
+          controller: lastNameController,
+          decoration: InputDecoration(labelText: 'Nama belakang'),
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: dayController,
+                decoration: InputDecoration(labelText: 'Tanggal'),
+              ),
+            ),
+            Expanded(
+              child: TextField(
+                controller: monthController,
+                decoration: InputDecoration(labelText: 'Bulan'),
+              ),
+            ),
+            Expanded(
+              child: TextField(
+                controller: yearController,
+                decoration: InputDecoration(labelText: 'Tahun'),
+              ),
+            ),
+          ],
+        ),
+        Row(
+          children: [
+            Radio<String>(
+              value: 'P',
+              groupValue: gender,
+              onChanged: (val) => setState(() => gender = val),
+            ),
+            const Text('Perempuan'),
+            Radio<String>(
+              value: 'L',
+              groupValue: gender,
+              onChanged: (val) => setState(() => gender = val),
+            ),
+            const Text('Laki-laki'),
+          ],
+        ),
+        TextField(
+          controller: phoneOrEmailController,
+          decoration: InputDecoration(labelText: 'Nomor seluler'),
+        ),
+        TextField(
+          controller: emailController,
+          decoration: InputDecoration(labelText: 'Email'),
+        ),
+        TextField(
+          controller: passwordController,
+          obscureText: true,
+          decoration: InputDecoration(labelText: 'Kata sandi baru'),
+        ),
+      ],
     );
   }
 }
