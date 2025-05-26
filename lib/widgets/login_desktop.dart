@@ -68,7 +68,7 @@ class _LoginDesktopState extends State<LoginDesktop> {
               controller: phoneController,
               keyboardType: TextInputType.phone,
               decoration: InputDecoration(
-                hintText: "0895632449666",
+                hintText: "Nomor ponsel atau Email",
                 filled: true,
                 fillColor: const Color(0xFFF0F2F5),
                 border: OutlineInputBorder(
