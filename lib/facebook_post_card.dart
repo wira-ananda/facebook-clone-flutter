@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'models/post.dart'; // Pastikan path ini sesuai dengan struktur folder kamu
 
 class FacebookPostCard extends StatelessWidget {
-  const FacebookPostCard({super.key});
+  final Post post;
+
+  const FacebookPostCard({super.key, required this.post});
 
   @override
   Widget build(BuildContext context) {
@@ -14,16 +17,19 @@ class FacebookPostCard extends StatelessWidget {
           // Bagian Atas (User Info)
           ListTile(
             leading: const CircleAvatar(
-              backgroundImage: AssetImage('assets/lowcostcosplay.jpg'),
+              backgroundImage: AssetImage(
+                'assets/profile.jpg',
+              ), // Default profil
             ),
-            title: const Text(
-              'Lowcostcosplay',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            title: Text(
+              'User ${post.userId}', // Ganti nanti dengan post.user.name kalau sudah ada
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             subtitle: Row(
-              children: const [
-                Text('2 menit yang lalu • ', style: TextStyle(fontSize: 12)),
-                Icon(Icons.public, size: 12),
+              children: [
+                Text(post.createdAt, style: const TextStyle(fontSize: 12)),
+                const SizedBox(width: 4),
+                const Icon(Icons.public, size: 12),
               ],
             ),
             trailing: IconButton(
@@ -32,30 +38,38 @@ class FacebookPostCard extends StatelessWidget {
             ),
           ),
 
-          // Caption
+          // Konten Status
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(post.content),
+          ),
+
+          const SizedBox(height: 10),
+
+          // Menampilkan gambar jika tersedia
+          if (post.imageUrl.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.network(
+                  post.imageUrl,
+                  errorBuilder:
+                      (context, error, stackTrace) => const Text(
+                        "Gambar gagal dimuat",
+                        style: TextStyle(color: Colors.red),
+                      ),
+                ),
+              ),
+            ),
+
+          const SizedBox(height: 10),
+
+          // Reaksi & Komentar (dummy sementara)
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Text('Radish... Lihat selengkapnya'),
-          ),
-
-          const SizedBox(height: 10),
-
-          // Gambar Utama
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.asset('assets/post_radish.jpg'),
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          // Reaksi & Komentar
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
-              children: const [
+              children: [
                 Icon(Icons.emoji_emotions, color: Colors.orange, size: 18),
                 SizedBox(width: 4),
                 Text('215'),
@@ -68,11 +82,11 @@ class FacebookPostCard extends StatelessWidget {
           const Divider(),
 
           // Tombol Aksi
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: const [
+              children: [
                 PostActionButton(
                   icon: Icons.thumb_up_alt_outlined,
                   label: 'Suka',

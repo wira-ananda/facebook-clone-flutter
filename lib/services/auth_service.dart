@@ -45,9 +45,24 @@ class AuthService {
         _logger.i("Registrasi berhasil: ${response.body}");
         onSuccess();
       } else {
-        final data = jsonDecode(response.body);
-        _logger.w("Registrasi gagal: $data");
-        onError(data['message'] ?? 'Registrasi gagal');
+        final body = response.body;
+        dynamic data;
+
+        try {
+          data = jsonDecode(body);
+        } catch (e) {
+          _logger.w("Gagal parse JSON: $body");
+          onError("Terjadi kesalahan dari server.");
+          return;
+        }
+
+        final message =
+            data is Map && data['message'] is String
+                ? data['message']
+                : 'Registrasi gagal';
+
+        _logger.w("Registrasi gagal: ${jsonEncode(data)}");
+        onError(message);
       }
     } catch (e, s) {
       _logger.e("Exception saat register", error: e, stackTrace: s);
